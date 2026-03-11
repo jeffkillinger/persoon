@@ -1,26 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #09090c;
+  --surface: #121318;
+  --surface-2: #171922;
+  --surface-3: #1d2028;
+  --border: rgba(145, 155, 178, 0.16);
+  --border-strong: rgba(145, 155, 178, 0.28);
+  --foreground: #edf1f7;
+  --foreground-soft: #b4bdcf;
+  --foreground-muted: #7f889b;
+  --accent-lime: #c9f45d;
+  --accent-cyan: #67d7ef;
+  --accent-violet: #c7a3ff;
+  --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-foreground-soft: var(--foreground-soft);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent-lime: var(--accent-lime);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-violet: var(--accent-violet);
+  --font-sans: var(--font-mono);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(103, 215, 239, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(201, 244, 93, 0.08), transparent 32%),
+    linear-gradient(180deg, #0a0b10 0%, #09090c 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-mono), monospace;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(201, 244, 93, 0.22);
+  color: var(--foreground);
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow:
+    0 0 0 1px rgba(9, 9, 12, 0.95),
+    0 0 0 3px rgba(103, 215, 239, 0.45);
+}
+
+.trait-slider {
+  appearance: none;
+  width: 100%;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(103, 215, 239, 0.35), rgba(201, 244, 93, 0.35));
+  cursor: pointer;
+}
+
+.trait-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--accent-lime);
+  border: 2px solid #0a0b10;
+  box-shadow: 0 0 0 1px rgba(201, 244, 93, 0.24);
+}
+
+.trait-slider::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--accent-lime);
+  border: 2px solid #0a0b10;
+  box-shadow: 0 0 0 1px rgba(201, 244, 93, 0.24);
+}
+
+.trait-slider::-moz-range-track {
+  height: 0.25rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(103, 215, 239, 0.35), rgba(201, 244, 93, 0.35));
 }
