@@ -1,13 +1,16 @@
+// client component because the sandbox uses React state/hooks for live interaction
 "use client";
 
 import { useMemo, useState } from "react";
 
+// constrain trait values so the personalization inputs stay type-safe
 type Role = "developer" | "marketer" | "executive" | "designer";
 type CompanySize = "startup" | "smb" | "enterprise";
 type TechnicalSkill = 1 | 2 | 3 | 4 | 5;
 type Budget = "low" | "medium" | "high";
 type Goal = "speed" | "scale" | "cost" | "compliance";
 
+// describe the structure of the main pieces of data
 interface PersonaTraits {
   role: Role;
   companySize: CompanySize;
@@ -41,6 +44,7 @@ interface ContentVariation {
   messagingTone: "technical" | "strategic" | "friendly" | "formal";
 }
 
+// types used by the rule engine to describe what trait to inspect and how to compare it
 type TraitKey = keyof PersonaTraits;
 type Operator = "eq" | "gte" | "lte" | "in";
 
@@ -55,6 +59,7 @@ interface Rule {
   label: string;
   priority: number;
   conditions: RuleCondition[];
+  // rule only overrides the content fields it cares about
   output: Partial<ContentVariation>;
 }
 
@@ -64,6 +69,7 @@ interface PersonalizationResult {
   confidence: number;
 }
 
+// creates the master feature catalog
 const FEATURES: Feature[] = [
   {
     id: "visual-editor",
@@ -115,9 +121,11 @@ const FEATURES: Feature[] = [
   },
 ];
 
+// helper function to pull features out of master catalog
 const getFeatures = (...ids: string[]) =>
   FEATURES.filter((feature) => ids.includes(feature.id));
 
+// list of preset user profiles
 const PERSONAS: Persona[] = [
   {
     id: "dev-startup",
@@ -173,6 +181,7 @@ const PERSONAS: Persona[] = [
   },
 ];
 
+// sets baseline before personalization rules apply
 const DEFAULT_CONTENT: ContentVariation = {
   heroHeadline: "Personalization that works at the speed of your audience.",
   heroSubcopy:
@@ -189,6 +198,7 @@ const DEFAULT_CONTENT: ContentVariation = {
   messagingTone: "friendly",
 };
 
+// personalization -- each rule describes when it should match and what it should change
 const RULES: Rule[] = [
   {
     id: "rule-developer",
@@ -320,17 +330,20 @@ const RULES: Rule[] = [
   },
 ];
 
+// option lists used to render trait controls
 const ROLE_OPTIONS: Role[] = ["developer", "marketer", "executive", "designer"];
 const COMPANY_SIZE_OPTIONS: CompanySize[] = ["startup", "smb", "enterprise"];
 const BUDGET_OPTIONS: Budget[] = ["low", "medium", "high"];
 const GOAL_OPTIONS: Goal[] = ["speed", "scale", "cost", "compliance"];
 
+// map semantic feature tags to badge styles in the UI
 const FEATURE_TAG_STYLES: Record<Feature["tag"], string> = {
   core: "border-cyan-400/20 bg-cyan-400/10 text-cyan-300",
   advanced: "border-lime-300/20 bg-lime-300/10 text-lime-200",
   enterprise: "border-violet-300/20 bg-violet-300/10 text-violet-200",
 };
 
+// map CTA urgency to different button treatments
 const CTA_STYLES: Record<ContentVariation["ctaUrgency"], string> = {
   low: "border border-white/10 bg-white/5 text-white/90 hover:border-white/20 hover:bg-white/8",
   medium:
@@ -338,6 +351,7 @@ const CTA_STYLES: Record<ContentVariation["ctaUrgency"], string> = {
   high: "border border-lime-300 bg-lime-300 text-zinc-950 hover:brightness-95",
 };
 
+// checks one-rule condition of current user traits. pass/fail
 function evaluateCondition(
   condition: RuleCondition,
   traits: PersonaTraits,
@@ -358,6 +372,7 @@ function evaluateCondition(
   }
 }
 
+// main personalization engine. finds matching rules, builds personalized content, calculates extra metadata (matched rules / confidence)
 function usePersonalizationEngine(traits: PersonaTraits): PersonalizationResult {
   return useMemo(() => {
     const matchedRules = [...RULES]
@@ -389,12 +404,14 @@ function formatLabel(value: string) {
   return value.replace("-", " ");
 }
 
+// defines props for PersonaSelector component
 interface PersonaSelectorProps {
   personas: Persona[];
   selectedId: string;
   onSelect: (persona: Persona) => void;
 }
 
+// renders the list of persona buttons on the sidebar
 function PersonaSelector({
   personas,
   selectedId,
@@ -438,12 +455,16 @@ function PersonaSelector({
   );
 }
 
+// trait controls need current traits and a way to push updated traits back to parent
 interface TraitControlsProps {
   traits: PersonaTraits;
   onChange: (traits: PersonaTraits) => void;
 }
 
+// renders manual controls to the sidebar. lets user edit role, company size, technical skill, etc.
 function TraitControls({ traits, onChange }: TraitControlsProps) {
+  
+  // updates one trait at a time while preserving others
   const setTrait = <K extends keyof PersonaTraits>(
     key: K,
     value: PersonaTraits[K],
@@ -451,6 +472,7 @@ function TraitControls({ traits, onChange }: TraitControlsProps) {
     onChange({ ...traits, [key]: value });
   };
 
+  // reduces repetition by rendering all chip-based selectors in a shared renderer
   const renderChipGroup = <T extends string>({
     label,
     value,
@@ -556,6 +578,7 @@ interface PreviewPanelProps {
   result: PersonalizationResult;
 }
 
+// renders the personalized experience. takes result and displays match summary, hero content, onboarding path, recommended features
 function PreviewPanel({ result }: PreviewPanelProps) {
   const { content, matchedRules, confidence } = result;
 
@@ -666,6 +689,12 @@ function PreviewPanel({ result }: PreviewPanelProps) {
     </section>
   );
 }
+
+// top-level component. 
+// 1. holds the state of the app (preset personas, current traits) from either a) preset personas or b) manual edits
+// 2. runs personalization engine (when traits change, engine computes personalized results)
+// 3. handles persona selection (mark persona as selected, replace current traits with persona's presets)
+// 4. composes page layout (renders full page: header, sidebar with PersonaSelector and TraitControls, right side PreviewPanel)
 
 export function PersoonSandbox() {
   const [selectedPersona, setSelectedPersona] = useState<Persona>(PERSONAS[0]);
