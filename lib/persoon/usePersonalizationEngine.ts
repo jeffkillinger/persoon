@@ -15,6 +15,8 @@ import { evaluateCondition } from "@/lib/persoon/utils";
 export function usePersonalizationEngine(
   traits: PersonaTraits,
 ): PersonalizationResult {
+  
+  // only recompute when traits change
   return useMemo(() => {
 
     // find all rules whose conditions fully match current traits 
