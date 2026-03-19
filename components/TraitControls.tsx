@@ -12,7 +12,6 @@ interface TraitControlsProps {
   onChange: (traits: PersonaTraits) => void;
 }
 
-
 // UI controls for editing persona traits
 // updates flow up to parent, which re-runs personalization engine
 export function TraitControls({ traits, onChange }: TraitControlsProps) {
