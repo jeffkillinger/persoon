@@ -1,5 +1,6 @@
 import type { Persona } from "@/lib/persoon/types";
 
+// preset personas used to simulate real user segments and drive sandbox UI
 export const PERSONAS: Persona[] = [
   {
     id: "dev-startup",

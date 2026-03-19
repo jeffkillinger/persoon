@@ -9,12 +9,16 @@ import { PERSONAS } from "@/lib/persoon/data/personas";
 import type { Persona, PersonaTraits } from "@/lib/persoon/types";
 import { usePersonalizationEngine } from "@/lib/persoon/usePersonalizationEngine";
 
+// top-level sandbox container
+// owns user state, runs personalization, and composes the UI
 export function PersoonSandbox() {
   const [selectedPersona, setSelectedPersona] = useState<Persona>(PERSONAS[0]);
   const [traits, setTraits] = useState<PersonaTraits>(PERSONAS[0].traits);
 
+  // derive the personalized experience from the current trait state
   const result = usePersonalizationEngine(traits);
 
+  // selecting a preset persona updates both the active persona and editable traits
   const handlePersonaSelect = (persona: Persona) => {
     setSelectedPersona(persona);
     setTraits(persona.traits);

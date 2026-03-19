@@ -6,6 +6,8 @@ interface PersonaSelectorProps {
   onSelect: (persona: Persona) => void;
 }
 
+// displays selectable persona presets
+// acts as a controlled component, with selection managed by the parent
 export function PersonaSelector({
   personas,
   selectedId,

@@ -5,6 +5,8 @@ interface PreviewPanelProps {
   result: PersonalizationResult;
 }
 
+// renders the fully personalized experience returned by the engine
+// displays the content, recommended features, and rule/debug metadata
 export function PreviewPanel({ result }: PreviewPanelProps) {
   const { content, matchedRules, confidence } = result;
 
@@ -96,6 +98,7 @@ export function PreviewPanel({ result }: PreviewPanelProps) {
         </div>
       </div>
 
+      {/* exposes which rules matched so the personalization logic is transparent */}
       <div>
         <div className="mb-3 text-[0.65rem] uppercase tracking-[0.24em] text-foreground-muted">
           Active Rules

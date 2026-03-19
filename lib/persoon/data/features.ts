@@ -1,5 +1,6 @@
 import type { Feature } from "@/lib/persoon/types";
 
+// central feature catalog used across the app for recommendations and rule outputs
 export const FEATURES: Feature[] = [
   {
     id: "visual-editor",

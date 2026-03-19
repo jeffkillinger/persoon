@@ -1,6 +1,7 @@
 import type { ContentVariation, Rule } from "@/lib/persoon/types";
 import { getFeatures } from "@/lib/persoon/utils";
 
+// baseline experience before any personalization rules are applied
 export const DEFAULT_CONTENT: ContentVariation = {
   heroHeadline: "Personalization that works at the speed of your audience.",
   heroSubcopy:
@@ -17,6 +18,8 @@ export const DEFAULT_CONTENT: ContentVariation = {
   messagingTone: "friendly",
 };
 
+// declarative rule set: each rule defines when it applies and what it overrides
+// priority controls merge order (higher priority rules applied later take precendence)
 export const RULES: Rule[] = [
   {
     id: "rule-developer",

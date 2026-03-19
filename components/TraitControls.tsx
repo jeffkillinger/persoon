@@ -12,7 +12,12 @@ interface TraitControlsProps {
   onChange: (traits: PersonaTraits) => void;
 }
 
+
+// UI controls for editing persona traits
+// updates flow up to parent, which re-runs personalization engine
 export function TraitControls({ traits, onChange }: TraitControlsProps) {
+  
+  // generic updater for any trait key
   const setTrait = <K extends keyof PersonaTraits>(
     key: K,
     value: PersonaTraits[K],
@@ -20,6 +25,7 @@ export function TraitControls({ traits, onChange }: TraitControlsProps) {
     onChange({ ...traits, [key]: value });
   };
 
+  // reusable renderer for chip-based selectors (avoids repeating UI logic)
   const renderChipGroup = <T extends string>({
     label,
     value,
