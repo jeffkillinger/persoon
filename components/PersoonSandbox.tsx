@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
+import { EventLogPanel } from "@/components/EventLogPanel";
 import { PersonaSelector } from "@/components/PersonaSelector";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { TraitControls } from "@/components/TraitControls";
 import { PERSONAS } from "@/lib/persoon/data/personas";
+import { useEventTracker } from "@/lib/persoon/useEventTracker";
 import type { Persona, PersonaTraits } from "@/lib/persoon/types";
 import { usePersonalizationEngine } from "@/lib/persoon/usePersonalizationEngine";
 
@@ -14,14 +17,72 @@ import { usePersonalizationEngine } from "@/lib/persoon/usePersonalizationEngine
 export function PersoonSandbox() {
   const [selectedPersona, setSelectedPersona] = useState<Persona>(PERSONAS[0]);
   const [traits, setTraits] = useState<PersonaTraits>(PERSONAS[0].traits);
+  const pathname = usePathname();
+  const { trackEvent, events, clearEvents } = useEventTracker();
+  const hasTrackedPageViewRef = useRef(false);
+  const trackedExposureKeysRef = useRef<Set<string>>(new Set());
 
   // derive the personalized experience from the current trait state
   const result = usePersonalizationEngine(traits);
+  const recommendedFeatureIds = result.content.recommendedFeatures.map(
+    (feature) => feature.id,
+  );
+
+  useEffect(() => {
+    if (hasTrackedPageViewRef.current) {
+      return;
+    }
+
+    hasTrackedPageViewRef.current = true;
+    trackEvent({
+      type: "page_view",
+      personaId: selectedPersona.id,
+      metadata: {
+        path: pathname,
+        surface: "persoon_sandbox",
+      },
+    });
+  }, [pathname, selectedPersona.id, trackEvent]);
+
+  useEffect(() => {
+    const exposureKey = [
+      selectedPersona.id,
+      ...recommendedFeatureIds,
+      ...result.matchedRules.map((rule) => rule.id),
+    ].join(":");
+
+    if (trackedExposureKeysRef.current.has(exposureKey)) {
+      return;
+    }
+
+    trackedExposureKeysRef.current.add(exposureKey);
+    trackEvent({
+      type: "feature_exposed",
+      personaId: selectedPersona.id,
+      metadata: {
+        featureIds: recommendedFeatureIds,
+        matchedRuleIds: result.matchedRules.map((rule) => rule.id),
+        recommendationCount: recommendedFeatureIds.length,
+      },
+    });
+  }, [recommendedFeatureIds, result.matchedRules, selectedPersona.id, trackEvent]);
 
   // selecting a preset persona updates both the active persona and editable traits
   const handlePersonaSelect = (persona: Persona) => {
     setSelectedPersona(persona);
     setTraits(persona.traits);
+  };
+
+  const handleCtaClick = () => {
+    trackEvent({
+      type: "cta_click",
+      personaId: selectedPersona.id,
+      metadata: {
+        ctaText: result.content.ctaText,
+        ctaUrgency: result.content.ctaUrgency,
+        matchedRuleIds: result.matchedRules.map((rule) => rule.id),
+      },
+    });
   };
 
   return (
@@ -58,7 +119,8 @@ export function PersoonSandbox() {
           </aside>
 
           <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <PreviewPanel result={result} />
+            <PreviewPanel result={result} onCtaClick={handleCtaClick} />
+            <EventLogPanel events={events} onClear={clearEvents} />
           </div>
         </div>
       </div>

@@ -1,13 +1,14 @@
-import { CTA_STYLES, FEATURE_TAG_STYLES } from "@/lib/persoon/constants";
 import type { PersonalizationResult } from "@/lib/persoon/types";
+import { CTA_STYLES, FEATURE_TAG_STYLES } from "@/lib/persoon/constants";
 
 interface PreviewPanelProps {
   result: PersonalizationResult;
+  onCtaClick: () => void;
 }
 
 // renders the fully personalized experience returned by the engine
 // displays the content, recommended features, and rule/debug metadata
-export function PreviewPanel({ result }: PreviewPanelProps) {
+export function PreviewPanel({ result, onCtaClick }: PreviewPanelProps) {
   const { content, matchedRules, confidence } = result;
 
   return (
@@ -41,6 +42,7 @@ export function PreviewPanel({ result }: PreviewPanelProps) {
         </p>
         <button
           type="button"
+          onClick={onCtaClick}
           className={`focus-ring mt-6 rounded-[0.9rem] px-5 py-3 text-sm transition ${CTA_STYLES[content.ctaUrgency]}`}
         >
           {content.ctaText}
