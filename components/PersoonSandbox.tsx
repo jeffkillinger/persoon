@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
+import { AudiencePanel } from "@/components/AudiencePanel";
 import { EventLogPanel } from "@/components/EventLogPanel";
 import { PersonaSelector } from "@/components/PersonaSelector";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { TraitControls } from "@/components/TraitControls";
 import { PERSONAS } from "@/lib/persoon/data/personas";
+import { useAudienceEvaluation } from "@/lib/persoon/useAudienceEvaluation";
 import { useEventTracker } from "@/lib/persoon/useEventTracker";
 import type { Persona, PersonaTraits } from "@/lib/persoon/types";
 import { usePersonalizationEngine } from "@/lib/persoon/usePersonalizationEngine";
@@ -19,21 +21,22 @@ export function PersoonSandbox() {
   const [traits, setTraits] = useState<PersonaTraits>(PERSONAS[0].traits);
   const pathname = usePathname();
   const { trackEvent, events, clearEvents } = useEventTracker();
-  const hasTrackedPageViewRef = useRef(false);
   const trackedExposureKeysRef = useRef<Set<string>>(new Set());
 
   // derive the personalized experience from the current trait state
   const result = usePersonalizationEngine(traits);
+  const { allAudienceResults, matchedAudiences } = useAudienceEvaluation(
+    { ...selectedPersona, traits },
+    events,
+  );
+  const recommendedFeatures = result.content.recommendedFeatures;
   const recommendedFeatureIds = result.content.recommendedFeatures.map(
     (feature) => feature.id,
   );
+  const recommendedFeatureCount = recommendedFeatureIds.length;
+  const recommendedFeatureKey = recommendedFeatureIds.join(":");
 
   useEffect(() => {
-    if (hasTrackedPageViewRef.current) {
-      return;
-    }
-
-    hasTrackedPageViewRef.current = true;
     trackEvent({
       type: "page_view",
       personaId: selectedPersona.id,
@@ -45,27 +48,37 @@ export function PersoonSandbox() {
   }, [pathname, selectedPersona.id, trackEvent]);
 
   useEffect(() => {
-    const exposureKey = [
-      selectedPersona.id,
-      ...recommendedFeatureIds,
-      ...result.matchedRules.map((rule) => rule.id),
-    ].join(":");
+    recommendedFeatures.forEach((feature) => {
+      const exposureKey = [
+        selectedPersona.id,
+        feature.id,
+        ...result.matchedRules.map((rule) => rule.id),
+      ].join(":");
 
-    if (trackedExposureKeysRef.current.has(exposureKey)) {
-      return;
-    }
+      if (trackedExposureKeysRef.current.has(exposureKey)) {
+        return;
+      }
 
-    trackedExposureKeysRef.current.add(exposureKey);
-    trackEvent({
-      type: "feature_exposed",
-      personaId: selectedPersona.id,
-      metadata: {
-        featureIds: recommendedFeatureIds,
-        matchedRuleIds: result.matchedRules.map((rule) => rule.id),
-        recommendationCount: recommendedFeatureIds.length,
-      },
+      trackedExposureKeysRef.current.add(exposureKey);
+      trackEvent({
+        type: "feature_exposed",
+        personaId: selectedPersona.id,
+        metadata: {
+          featureId: feature.id,
+          featureName: feature.name,
+          matchedRuleIds: result.matchedRules.map((rule) => rule.id),
+          recommendationCount: recommendedFeatureCount,
+        },
+      });
     });
-  }, [recommendedFeatureIds, result.matchedRules, selectedPersona.id, trackEvent]);
+  }, [
+    recommendedFeatureCount,
+    recommendedFeatureKey,
+    recommendedFeatures,
+    result.matchedRules,
+    selectedPersona.id,
+    trackEvent,
+  ]);
 
   // selecting a preset persona updates both the active persona and editable traits
   const handlePersonaSelect = (persona: Persona) => {
@@ -120,6 +133,10 @@ export function PersoonSandbox() {
 
           <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
             <PreviewPanel result={result} onCtaClick={handleCtaClick} />
+            <AudiencePanel
+              results={allAudienceResults}
+              matchedCount={matchedAudiences.length}
+            />
             <EventLogPanel events={events} onClear={clearEvents} />
           </div>
         </div>
